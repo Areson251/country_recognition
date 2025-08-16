@@ -42,10 +42,9 @@ class OCRCountryScorer:
         # MRZ issuing state code
         m = MRZ_ISSUING_RE.search(text_full.replace(" ", ""))
         if m:
-            code = m.group(1)
-            country = ALPHA3_MAP.get(code)
-            if country is not None:
-                scores[NAME_TO_IDX[country]] += 2.0  # strong signal
+            code = m.group(1)  # "UZB"
+            if code in ALPHA3_MAP:
+                scores[NAME_TO_IDX[code]] += 2.0
         # Alias fuzzy matches
         if fuzz is not None:
             for ci, alias in self.alias_list:

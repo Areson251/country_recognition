@@ -33,12 +33,8 @@ COUNTRY_LIST: dict[str, list[str]] = {
 }
 
 # MRZ issuing state (ISO 3166-1 alpha-3) map for the 24 countries
-ALPHA3_MAP = {
-    "BEL": "Belgium", "BGR": "Bulgaria", "BLR": "Belarus", "CAN": "Canada", "CHL": "Chile",
-    "DEU": "Germany", "DOM": "Dominican Republic", "ESP": "Spain", "EST": "Estonia", "GBR": "United Kingdom",
-    "HUN": "Hungary", "IDN": "Indonesia", "IRL": "Ireland", "ITA": "Italy", "KAZ": "Kazakhstan",
-    "KGZ": "Kyrgyzstan", "MDA": "Moldova", "MEX": "Mexico", "NLD": "Netherlands", "POL": "Poland",
-    "SVK": "Slovakia", "SWE": "Sweden", "USA": "United States", "UZB": "Uzbekistan"
+ALPHA3_MAP: dict[str, str] = {
+    code: names[0] for code, names in COUNTRY_LIST.items()
 }
 
 COUNTRIES = list(COUNTRY_LIST.keys())

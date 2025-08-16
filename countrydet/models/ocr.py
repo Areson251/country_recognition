@@ -2,24 +2,9 @@
 OCR branch (EasyOCR + heuristics)
 -----------------------------
 """
-from __future__ import annotations
-import os
-import re
-import time
-import glob
-import math
-import json
-import random
-from dataclasses import dataclass
-from typing import Any
 
-import numpy as np
+import re
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
-from PIL import Image
 
 from countrydet.engine.cfg import COUNTRY_LIST, NAME_TO_IDX, NUM_CLASSES, ALPHA3_MAP
 

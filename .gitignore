@@ -3,5 +3,8 @@
 *.pth
 *.safetensors
 
+__pycache__
+
 /dataset
 /dataset_orig
+/logs

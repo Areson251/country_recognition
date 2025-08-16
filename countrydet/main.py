@@ -24,15 +24,12 @@ Notes
 - EasyOCR is PyTorch‑based; install: `pip install easyocr open_clip_torch rapidfuzz`.
 
 """
-from __future__ import annotations
+
 import json
 
-import torch
-
-# Optional (speed/quality): set torch.backends flags if on GPU
-if torch.cuda.is_available():
-    torch.backends.cudnn.benchmark = True
-
+from countrydet.engine.train import TrainConfig, Trainer
+from countrydet.engine.inference import InferConfig, InferencePipeline
+from countrydet.engine.evaluate import evaluate_folder
 
 if __name__ == "__main__":
     import argparse
@@ -61,15 +58,26 @@ if __name__ == "__main__":
 
     args = p.parse_args()
     if args.cmd == 'train':
-        cfg = TrainConfig(root=args.root, image_size=args.image_size, batch_size=args.batch_size, epochs=args.epochs, lr=args.lr, num_workers=args.num_workers)
+        cfg = TrainConfig(root=args.root, 
+                          image_size=args.image_size, 
+                          batch_size=args.batch_size, 
+                          epochs=args.epochs, 
+                          lr=args.lr, 
+                          num_workers=args.num_workers)
         tr = Trainer(cfg)
         tr.train()
+
     elif args.cmd == 'eval':
-        pipe = InferencePipeline(InferConfig(weights=args.weights, image_size=args.image_size, use_ocr=not args.no_ocr))
+        pipe = InferencePipeline(InferConfig(weights=args.weights, 
+                                             image_size=args.image_size, 
+                                             use_ocr=not args.no_ocr))
         res = evaluate_folder(pipe, args.root)
         print(json.dumps(res, indent=2))
+
     elif args.cmd == 'predict':
-        pipe = InferencePipeline(InferConfig(weights=args.weights, image_size=args.image_size, use_ocr=not args.no_ocr))
+        pipe = InferencePipeline(InferConfig(weights=args.weights, 
+                                             image_size=args.image_size, 
+                                             use_ocr=not args.no_ocr))
         out = pipe.predict_one(args.image)
         print(json.dumps(out, indent=2))
     else:

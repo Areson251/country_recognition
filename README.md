@@ -2,9 +2,17 @@
 ![Pipeline scheme](src/scheme.png)
 
 # Installation
-docker
+`build.sh` build docker image
+
+`start.sh` start docker container
+
+`into.sh` go into docker container
+
 ```
-pip install numpy torch pillow easyocr open_clip_torch rapidfuzz
+chmod +x build.sh start.sh into.sh
+./build.sh 
+./start.sh 
+./into.sh 
 ```
 
 # Prepare data
@@ -15,3 +23,13 @@ TEST_COUNT = 10 - samples count in test
 python countrydet/dataset/split_imgs.py
 ```
 
+# Train
+
+# Inference
+
+# Results
+[See more](docs/EXPERIMENTS.md)
+
+# Contact Me
+
+TODO: ссылочка на тг и можно мем какой-нибудь

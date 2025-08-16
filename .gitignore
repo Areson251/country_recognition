@@ -4,3 +4,4 @@
 *.safetensors
 
 /dataset
+/dataset_orig

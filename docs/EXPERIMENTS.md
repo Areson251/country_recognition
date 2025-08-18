@@ -31,5 +31,5 @@ python -m countrydet.main predict --image src/UZB_12.jpg --image_size 224 --weig
 ## Fine-tuned
 Let's train before!
 ```
-python -m countrydet.main train --root dataset/train_val --epochs 10 --batch_size 2 --lr 1e-4
+python -m countrydet.main train --root dataset/train_val --epochs 10 --batch_size 2 --image_size 224 --lr 1e-4
 ```

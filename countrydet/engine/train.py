@@ -36,7 +36,8 @@ class TrainConfig:
 class Trainer:
     def __init__(self, cfg: TrainConfig):
         self.cfg = cfg
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda')
+        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.train_ds = DocDataset(cfg.root, split="train", image_size=cfg.image_size)
         self.val_ds = DocDataset(cfg.root, split="val", image_size=cfg.image_size)
 

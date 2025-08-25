@@ -73,9 +73,9 @@ class Trainer:
 
         with torch.autocast(device_type=self.device.type if self.device.type!="mps" 
                             else 'cpu', enabled=(self.device.type=="cuda" and self.cfg.mixed_precision)):
-            logits_clip = self.clip_branch(x)
             logits_ocr  = torch.stack([self.ocr_branch.score(p)  
                                    for p in paths]).to(self.device)
+            logits_clip = self.clip_branch(x)
             
             logits = self.fusion(logits_clip, logits_ocr)
             loss = F.cross_entropy(logits, y)
@@ -99,8 +99,8 @@ class Trainer:
             x = x.to(self.device)
             y = y.to(self.device)
             logits = self.fusion(self.clip_branch(x), 
-                                    torch.zeros((x.size(0), NUM_CLASSES), 
-                                    device=self.device))
+                                    self.ocr_branch(x), 
+                                    device=self.device)
             top1 = logits.argmax(dim=-1)
             top3 = logits.topk(3, dim=-1).indices
             correct += (top1==y).sum().item()

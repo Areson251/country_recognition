@@ -1,8 +1,8 @@
 ## Pretrained
-```
-python -m countrydet.main predict --image src/UZB_12.jpg --image_size 224 --weights "none" > logs/untrained_metrics.json
-```
+Test image:
+![test img](../src/UZB_12.jpg)
 
+```
 {
   "topk_indices": [
     23,
@@ -27,9 +27,19 @@ python -m countrydet.main predict --image src/UZB_12.jpg --image_size 224 --weig
   ],
   "latency_s": 151.470315487
 }
+```
 
 ## Fine-tuned
-Let's train before!
-```
-python -m countrydet.main train --root dataset/train_val --epochs 10 --batch_size 2 --image_size 224 --lr 1e-4
-```
+Unfortunately, there was not enough computing resources for training and inference :(
+Colab kept falling always for me...
+![grustniy homyak](../src/sadnes.jpg)
+
+## Conclusion
+**pros:**
+- due to the CLIP branch, the pipeline can be scaled to new countries and new types of documents (at least, need to add a country to the dictionary for OSR)
+- includes various features in addition to MRZ
+
+
+**cons:**
+- takes a long time to learn (may be fix by distributed ocr branch)
+- takes a long time to learn (may be fix by distributed ocr branch)

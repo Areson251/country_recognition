@@ -8,6 +8,7 @@ import os
 import glob
 import numpy as np
 from typing import Any
+from tqdm import tqdm
 
 import torch
 
@@ -20,10 +21,11 @@ def evaluate_folder(pipeline: InferencePipeline, folder: str) -> dict[str, Any]:
     y_true, y_pred = [], []
     latencies = []
     for cname in COUNTRIES:
+        print(cname)
         class_dir = os.path.join(folder, cname)
         if not os.path.isdir(class_dir):
             continue
-        for fp in glob.glob(os.path.join(class_dir, '*')):
+        for fp in tqdm(glob.glob(os.path.join(class_dir, '*'))):
             if not os.path.isfile(fp):
                 continue
             res = pipeline.predict_one(fp)

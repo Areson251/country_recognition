@@ -6,7 +6,9 @@
 *.safetensors
 
 __pycache__
+.vscode
 
 /dataset
 /dataset_orig
 /logs
+/runs

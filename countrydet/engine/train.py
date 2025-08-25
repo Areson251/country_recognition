@@ -12,11 +12,13 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from countrydet.dataset.dataset import DocDataset
 from countrydet.engine.cfg import COUNTRIES, NUM_CLASSES
 from countrydet.models.feature_extractor import CLIPScorer
 from countrydet.models.fusion import FusionHead
+from countrydet.models.ocr import OCRCountryScorer
 
 # Optional (speed/quality): set torch.backends flags if on GPU
 if torch.cuda.is_available():
@@ -36,41 +38,46 @@ class TrainConfig:
 class Trainer:
     def __init__(self, cfg: TrainConfig, log_dir: str = "runs/fusion_train"):
         self.cfg = cfg
-        self.device = torch.device('cuda')
-        # self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        # self.device = torch.device('cuda')
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(f"Using device: {self.device}")
+
         self.train_ds = DocDataset(cfg.root, split="train", image_size=cfg.image_size)
         self.val_ds = DocDataset(cfg.root, split="val", image_size=cfg.image_size)
 
         self.train_dl = DataLoader(self.train_ds, 
                                    batch_size=cfg.batch_size, 
                                    shuffle=True, 
-                                   num_workers=cfg.num_workers, 
+                                   num_workers=0, 
                                    pin_memory=True)
         self.val_dl = DataLoader(self.val_ds, 
                                  batch_size=cfg.batch_size, 
                                  shuffle=False, 
-                                 num_workers=cfg.num_workers, 
+                                 num_workers=0, 
                                  pin_memory=True)
 
         self.clip_branch = CLIPScorer(image_size=cfg.image_size).to(self.device)
+        self.ocr_branch = OCRCountryScorer(languages=["en"]) 
         self.fusion = FusionHead(NUM_CLASSES).to(self.device)
         self.opt = torch.optim.AdamW(list(self.fusion.parameters()) + [self.clip_branch.logit_scale], 
                                                                         lr=cfg.lr, weight_decay=1e-4)
-        self.scaler = torch.cuda.amp.GradScaler(enabled=(self.device.type=="cuda" and cfg.mixed_precision))
+        self.scaler = torch.amp.GradScaler(enabled=(self.device.type=="cuda" and cfg.mixed_precision))
 
         self.writer = SummaryWriter(log_dir=log_dir)
         self.global_step = 0
 
     def _step(self, batch, train: bool):
-        x, y, _ = batch
+        x, y, paths = batch
         x = x.to(self.device, non_blocking=True)
         y = y.to(self.device, non_blocking=True)
+
         with torch.autocast(device_type=self.device.type if self.device.type!="mps" 
                             else 'cpu', enabled=(self.device.type=="cuda" and self.cfg.mixed_precision)):
             logits_clip = self.clip_branch(x)
-            # For training, approximate OCR scores as zeros (since OCR uses file paths).
-            # We keep fusion learnable mainly over CLIP + bias; OCR is added at inference.
-            logits = self.fusion(logits_clip, torch.zeros_like(logits_clip))
+            logits_ocr  = torch.stack([self.ocr_branch.score(p)  
+                                   for p in paths]).to(self.device)
+            
+            logits = self.fusion(logits_clip, logits_ocr)
             loss = F.cross_entropy(logits, y)
 
         if train:
@@ -116,9 +123,11 @@ class Trainer:
         best = 0.0
         best_epoch = -1
         for ep in range(1, self.cfg.epochs+1):
-            self.clip_branch.eval(); self.fusion.train()
+            self.clip_branch.eval()
+            self.fusion.train()
+
             losses = []
-            for batch in self.train_dl:
+            for batch in tqdm(self.train_dl):
                 loss, _ = self._step(batch, train=True)
                 losses.append(loss)
             
@@ -128,7 +137,8 @@ class Trainer:
             acc, acc3, _, _ = self._eval_epoch(ep)
             print(f"[Ep {ep}] loss={mean_loss:.4f}  val@1={acc:.3f}  val@3={acc3:.3f}  "
                   f"alpha={self.fusion.alpha.item():.2f} beta={self.fusion.beta.item():.2f} "
-                  f"T={self.clip_branch.logit_scale.exp().item():.2f}")
+                  f"T={self.clip_branch.logit_scale.exp().item():.2f}\n")
+            
             if acc > best:
                 best = acc
                 best_epoch = ep
